@@ -580,7 +580,7 @@ Rules: 2-4 vivid sentences per response. Reference SRD 5.1 rules. Mark dice roll
   const res=await fetch("/api/dm",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:messages.filter(m=>m.role!=="system")}),
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:sys,messages:messages.filter(m=>m.role!=="system")}),
   });
   const data=await res.json();
   return data.content?.[0]?.text||"The fates are momentarily silent… try again.";
