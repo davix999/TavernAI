@@ -221,8 +221,15 @@ function computeRange(token, tokens) {
 // RPG DATA — sourced from 5esrd.com SRD 5.1.1
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Standard array — player assigns these values to their stats
 const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+
+const DEMO_CHARACTER = {
+  name:"Thorin Darkblade", race:"Half-Orc", charClass:"Fighter",
+  background:"Soldier", alignment:"Chaotic Neutral", level:3,
+  backstory:"A mercenary haunted by a failed mission. Seeks redemption through gold and glory.",
+  subrace:"",
+  stats:{str:17,dex:13,con:16,int:9,wis:11,cha:8}, hp:28, maxHp:28,
+};
 
 const RACES_DATA = {
   Human: {
@@ -355,7 +362,7 @@ const RACES_DATA = {
       {name:"Languages", desc:"Common, Elvish, and one language of your choice."},
     ],
     subraces:[],
-    flexBonuses:2, // player chooses 2 additional +1s
+    flexBonuses:2,
   },
   "Half-Orc": {
     emoji:"💪", color:"#6a9a50",
@@ -536,7 +543,6 @@ const CLASSES_DATA = {
   },
 };
 
-// Flat arrays still needed by other parts of the app
 const CLASSES = Object.entries(CLASSES_DATA).map(([name,d])=>({name, emoji:d.emoji}));
 const RACES = Object.keys(RACES_DATA);
 const BACKGROUNDS=["Soldier","Scholar","Criminal","Noble","Outlander","Acolyte","Merchant","Hermit","Folk Hero","Entertainer"];
@@ -572,12 +578,13 @@ Stats: STR${character.stats.str} DEX${character.stats.dex} CON${character.stats.
 Backstory: ${character.backstory||"Unknown past."}
 Rules: 2-4 vivid sentences per response. Reference SRD 5.1 rules. Mark dice rolls as [ROLL: Stealth DC 13]. Stay in character as DM.`;
   const res=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",headers: {
-  "Content-Type": "application/json",
-  "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
-  "anthropic-version": "2023-06-01",
-  "anthropic-dangerous-direct-browser-access": "true",
-},
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key":import.meta.env.VITE_ANTHROPIC_KEY,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true",
+    },
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:messages.filter(m=>m.role!=="system")}),
   });
   const data=await res.json();
@@ -585,7 +592,7 @@ Rules: 2-4 vivid sentences per response. Reference SRD 5.1 rules. Mark dice roll
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VOICE / SPEECH HOOK  (Web Speech API — works in Chrome/Edge, graceful elsewhere)
+// VOICE / SPEECH HOOK
 // ─────────────────────────────────────────────────────────────────────────────
 function useSpeech(onTranscript) {
   const [listening, setListening] = useState(false);
@@ -601,7 +608,7 @@ function useSpeech(onTranscript) {
     const rec = new SR();
     rec.continuous      = false;
     rec.interimResults  = true;
-    rec.lang            = "en-US"; // browser locale used in production
+    rec.lang            = "en-US";
     recRef.current      = rec;
 
     rec.onresult = (e) => {
@@ -657,7 +664,6 @@ const STYLES = `
 
   .gold-line{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold),var(--gold-dim),transparent);margin:1.25rem 0;}
 
-  /* ─ LANDING ─ */
   .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(139,26,26,.15) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(201,168,76,.08) 0%,transparent 70%),var(--void);}
   .hero-sigil{font-size:4rem;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(201,168,76,.5));}
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
@@ -666,14 +672,12 @@ const STYLES = `
   .hero-sub{font-family:'Cinzel',serif;font-size:clamp(.9rem,2vw,1.3rem);color:var(--silver);letter-spacing:.1em;margin-bottom:2rem;}
   .hero-tag{font-style:italic;color:var(--parchment-dim);font-size:1.05rem;max-width:540px;line-height:1.7;margin-bottom:2.5rem;}
 
-  /* ─ FEATURE GRID ─ */
   .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.4rem;}
   .fcard{background:var(--coal);border:1px solid var(--rune);padding:1.75rem;transition:all .3s;position:relative;overflow:hidden;}
   .fcard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.05),transparent 60%);opacity:0;transition:opacity .3s;}
   .fcard:hover{border-color:var(--gold-dim);transform:translateY(-3px);}
   .fcard:hover::before{opacity:1;}
 
-  /* ─ PRICING ─ */
   .price-card{background:var(--coal);border:1px solid var(--rune);padding:1.75rem;transition:all .3s;position:relative;}
   .price-card.featured{border-color:var(--gold);box-shadow:0 0 30px rgba(201,168,76,.2);}
   .price-card.featured::before{content:'⚜ Most Popular ⚜';position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--void);font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;padding:.2rem .9rem;white-space:nowrap;}
@@ -681,14 +685,12 @@ const STYLES = `
   .price-features li{color:var(--silver);font-size:.86rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:.5rem;}
   .price-features li::before{content:'◆';color:var(--gold-dim);font-size:.5rem;flex-shrink:0;}
 
-  /* ─ NAV ─ */
   .top-nav{position:fixed;top:0;left:0;right:0;background:rgba(5,5,8,.92);border-bottom:1px solid var(--gold-dim);padding:.9rem 1.75rem;display:flex;align-items:center;justify-content:space-between;z-index:200;backdrop-filter:blur(10px);}
   .nav-logo{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold);cursor:pointer;display:flex;align-items:center;gap:.4rem;}
   .nav-link{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--silver);cursor:pointer;background:none;border:none;transition:color .2s;}
   .nav-link:hover{color:var(--gold);}
   .lang-sel{background:var(--slate);border:1px solid var(--rune);color:var(--parchment);font-family:'Cinzel',serif;font-size:.68rem;padding:.3rem .55rem;outline:none;cursor:pointer;}
 
-  /* ─ CHAR CREATE ─ */
   .char-sheet{background:var(--coal);border:1px solid var(--gold-dim);padding:2.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1.75rem;}
   .char-sheet-full{grid-column:1/-1;}
   .field-label{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:.45rem;display:block;}
@@ -698,24 +700,20 @@ const STYLES = `
   .stat-btn{background:var(--ghost);border:1px solid var(--rune);color:var(--gold);font-family:'Cinzel',serif;width:22px;height:22px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
   .stat-btn:hover{background:var(--rune);}
 
-  /* ─ LOBBY ─ */
   .session-card{background:var(--coal);border:1px solid var(--rune);padding:1.4rem;cursor:pointer;transition:all .25s;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;}
   .session-card:hover{border-color:var(--gold-dim);transform:translateX(3px);}
   .session-card.active{border-color:var(--gold);background:rgba(201,168,76,.05);}
   .session-tag{background:var(--ghost);color:var(--gold-dim);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;padding:.18rem .45rem;text-transform:uppercase;}
   .session-tag.open{background:rgba(20,100,40,.3);color:#4caf7a;border:1px solid rgba(76,175,122,.3);}
 
-  /* ─ GAME SHELL ─ */
   .game-shell{height:100vh;display:grid;grid-template-columns:250px 1fr 245px;grid-template-rows:52px 1fr;overflow:hidden;}
   .game-topbar{grid-column:1/-1;background:rgba(5,5,12,.97);border-bottom:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;gap:.75rem;backdrop-filter:blur(8px);}
 
-  /* ─ TAB SWITCHER ─ */
   .view-tabs{display:flex;gap:2px;background:var(--void);padding:2px;border:1px solid var(--rune);}
   .view-tab{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .9rem;cursor:pointer;border:none;transition:all .2s;background:transparent;color:var(--silver);}
   .view-tab.active{background:var(--gold);color:var(--void);font-weight:700;}
   .view-tab:not(.active):hover{background:rgba(201,168,76,.1);color:var(--gold);}
 
-  /* ─ LEFT CHAR PANEL ─ */
   .char-panel{background:var(--coal);border-right:1px solid var(--gold-dim);padding:1.1rem;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem;}
   .mini-stat{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
   .inv-item{font-size:.78rem;color:var(--silver);padding:.28rem 0;display:flex;align-items:center;gap:.4rem;}
@@ -723,7 +721,6 @@ const STYLES = `
   .hp-bar-out{background:var(--slate);height:7px;border:1px solid var(--rune);overflow:hidden;}
   .hp-bar-in{height:100%;transition:width .5s ease;}
 
-  /* ─ RIGHT PANEL ─ */
   .right-panel{background:var(--coal);border-left:1px solid var(--gold-dim);overflow:hidden;display:flex;flex-direction:column;}
   .panel-tabs{display:flex;border-bottom:1px solid var(--rune);flex-shrink:0;}
   .ptab{flex:1;font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.07em;text-transform:uppercase;padding:.5rem .2rem;cursor:pointer;border:none;transition:all .2s;background:transparent;color:var(--silver);position:relative;}
@@ -731,7 +728,6 @@ const STYLES = `
   .ptab:hover:not(.active){color:var(--parchment);}
   .panel-body{padding:1rem;flex:1;overflow-y:auto;}
 
-  /* ─ NARRATIVE CENTER ─ */
   .narrative-col{display:flex;flex-direction:column;overflow:hidden;}
   .narrative-scroll{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.9rem;}
   .msg{max-width:84%;animation:msgIn .3s ease;}
@@ -760,7 +756,6 @@ const STYLES = `
   .quick-btn{background:var(--ghost);border:1px solid var(--rune);color:var(--silver);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;padding:.28rem .65rem;cursor:pointer;text-transform:uppercase;transition:all .2s;}
   .quick-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
 
-  /* ─ MIC BUTTON ─ */
   .mic-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--rune);background:var(--slate);color:var(--silver);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;position:relative;}
   .mic-btn:hover:not(:disabled){border-color:var(--gold-dim);color:var(--gold);}
   .mic-btn.active{border-color:#ef4444;background:rgba(239,68,68,.15);color:#ef4444;animation:micPulse 1s ease-in-out infinite;}
@@ -768,7 +763,6 @@ const STYLES = `
   @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
   .mic-interim{font-size:.75rem;color:var(--silver);font-style:italic;padding:.3rem .5rem;background:rgba(239,68,68,.06);border:1px dashed rgba(239,68,68,.3);line-height:1.4;min-height:28px;}
 
-  /* ─ PARTY CHAT ─ */
   .chat-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.55rem;padding:.85rem .9rem;}
   .chat-msg{display:flex;flex-direction:column;gap:.18rem;}
   .chat-msg.mine{align-items:flex-end;}
@@ -785,28 +779,16 @@ const STYLES = `
   .chat-send{background:var(--gold-dim);border:none;color:var(--void);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;padding:.5rem .7rem;cursor:pointer;height:40px;transition:all .2s;font-weight:700;text-transform:uppercase;flex-shrink:0;}
   .chat-send:hover{background:var(--gold);}
   .chat-send:disabled{opacity:.35;cursor:not-allowed;}
-  .quick-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
 
-  /* ─ RIGHT PANEL ─ */
-  .right-panel{background:var(--coal);border-left:1px solid var(--gold-dim);overflow-y:auto;display:flex;flex-direction:column;}
-  .panel-tabs{display:flex;border-bottom:1px solid var(--rune);}
-  .ptab{flex:1;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.55rem;cursor:pointer;border:none;transition:all .2s;background:transparent;color:var(--silver);}
-  .ptab.active{background:rgba(201,168,76,.1);color:var(--gold);border-bottom:2px solid var(--gold);}
-  .ptab:hover:not(.active){color:var(--parchment);}
-  .panel-body{padding:1rem;flex:1;overflow-y:auto;}
-
-  /* ─ BATTLE MAP ─ */
   .map-wrap{position:relative;overflow:hidden;background:#050508;flex:1;}
   @keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:1}60%{transform:translateY(-55px) scale(1.1);opacity:1}100%{transform:translateY(-90px) scale(.8);opacity:0}}
   @keyframes pulseGlow{0%,100%{opacity:1}50%{opacity:.5}}
   @keyframes initGlow{0%,100%{box-shadow:0 0 6px #c9a84c33}50%{box-shadow:0 0 18px #c9a84c88}}
 
-  /* ─ BATTLE BOTTOM BAR ─ */
   .dice-bar{background:rgba(5,5,12,.96);border-top:1px solid var(--gold-dim);display:flex;align-items:center;padding:0 1rem;gap:.8rem;height:52px;flex-shrink:0;}
   .dice-btn{background:var(--coal);border:1px solid var(--rune);color:var(--silver);font-family:'Cinzel',serif;font-size:.7rem;padding:.32rem .65rem;cursor:pointer;transition:all .18s;letter-spacing:.08em;}
   .dice-btn:hover{border-color:var(--gold);color:var(--gold);}
 
-  /* section header */
   .section-hdr{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:.8rem;}
 `;
 
@@ -848,9 +830,6 @@ function CharPanel({ character, classes }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PARTY CHAT PANEL (sub-component used inside RightPanel)
-// ─────────────────────────────────────────────────────────────────────────────
 function PartyChatPanel({ chatMessages, sendChat, character }) {
   const [text, setText] = useState("");
   const scrollRef = useRef(null);
@@ -868,7 +847,6 @@ function PartyChatPanel({ chatMessages, sendChat, character }) {
 
   const handleKey = (e) => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
 
-  // Voice appends to text — player still hits send, keeps control
   const { listening, interim, toggle, supported } = useSpeech((t) => {
     setText(prev => prev ? prev + " " + t : t);
   });
@@ -877,7 +855,6 @@ function PartyChatPanel({ chatMessages, sendChat, character }) {
 
   return (
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden"}}>
-      {/* Header */}
       <div style={{padding:".6rem .9rem",borderBottom:"1px solid var(--rune)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div className="section-hdr" style={{margin:0}}>💬 Party Chat</div>
         <div style={{fontSize:".6rem",color:"#4caf7a",fontFamily:"'Cinzel',serif",letterSpacing:".08em",display:"flex",alignItems:"center",gap:".3rem"}}>
@@ -885,8 +862,6 @@ function PartyChatPanel({ chatMessages, sendChat, character }) {
           {PARTY_MEMBERS.length + 1} online
         </div>
       </div>
-
-      {/* Messages */}
       <div className="chat-scroll" ref={scrollRef}>
         {chatMessages.length===0 && (
           <div style={{textAlign:"center",color:"var(--rune)",fontSize:".7rem",fontStyle:"italic",padding:"1rem 0"}}>
@@ -909,42 +884,26 @@ function PartyChatPanel({ chatMessages, sendChat, character }) {
           );
         })}
       </div>
-
-      {/* Voice interim preview */}
       {listening && (
         <div className="mic-interim" style={{margin:"0 .75rem .4rem",flexShrink:0}}>
           🎙 {interim || <span style={{color:"var(--rune)"}}>Listening…</span>}
         </div>
       )}
-
-      {/* Input */}
       <div className="chat-input-row">
         {supported && (
-          <button
-            className={`mic-btn ${listening?"active":""}`}
-            onClick={toggle}
-            title={listening?"Stop":"Speak"}
-            style={{width:36,height:36,borderRadius:4,fontSize:".9rem",flexShrink:0}}
-          >
+          <button className={`mic-btn ${listening?"active":""}`} onClick={toggle} title={listening?"Stop":"Speak"}
+            style={{width:36,height:36,borderRadius:4,fontSize:".9rem",flexShrink:0}}>
             {listening?"⏹":"🎙"}
           </button>
         )}
-        <textarea
-          className="chat-input"
-          value={text}
-          onChange={e=>setText(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Message party… (Enter)"
-        />
+        <textarea className="chat-input" value={text} onChange={e=>setText(e.target.value)}
+          onKeyDown={handleKey} placeholder="Message party… (Enter)"/>
         <button className="chat-send" onClick={()=>send()} disabled={!text.trim()}>Send</button>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RIGHT PANEL
-// ─────────────────────────────────────────────────────────────────────────────
 function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers, round, chatMessages, sendChat, character, unread, clearUnread }) {
   const [rtab, setRtab] = useState(gameTab==="battle" ? "initiative" : "party");
   useEffect(()=>{ setRtab(gameTab==="battle"?"initiative":"party"); },[gameTab]);
@@ -958,25 +917,18 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
         <button className={`ptab ${rtab==="party"?"active":""}`} onClick={()=>switchTab("party")}>Party</button>
         <button className={`ptab ${rtab==="rolls"?"active":""}`} onClick={()=>switchTab("rolls")}>Rolls</button>
         {gameTab==="battle" && <button className={`ptab ${rtab==="legend"?"active":""}`} onClick={()=>switchTab("legend")}>Map</button>}
-        {/* Chat tab with unread badge */}
         <button className={`ptab ${rtab==="chat"?"active":""}`} onClick={()=>switchTab("chat")} style={{position:"relative"}}>
           Chat
           {unread > 0 && rtab !== "chat" && (
-            <span style={{
-              position:"absolute",top:4,right:4,
-              background:"var(--crimson-bright)",color:"#fff",
-              borderRadius:"50%",width:14,height:14,
-              fontSize:".52rem",display:"flex",alignItems:"center",justifyContent:"center",
-              fontFamily:"'Cinzel',serif",fontWeight:700,
-            }}>{unread > 9 ? "9+" : unread}</span>
+            <span style={{position:"absolute",top:4,right:4,background:"var(--crimson-bright)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:".52rem",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cinzel',serif",fontWeight:700}}>
+              {unread > 9 ? "9+" : unread}
+            </span>
           )}
         </button>
       </div>
 
-      {/* Non-chat tabs use scrollable panel-body */}
       {rtab !== "chat" && (
         <div className="panel-body">
-          {/* INITIATIVE */}
           {rtab==="initiative" && (
             <div>
               <div className="section-hdr">⚔ Round {round} · Initiative</div>
@@ -984,13 +936,7 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
                 const tok=tokens.find(x=>x.id===t.id);
                 const hp=tok?.hp??t.hp; const hf=hp/t.maxHp; const isCur=i===turnIdx;
                 return (
-                  <div key={t.id} style={{
-                    display:"flex",alignItems:"center",gap:".5rem",padding:".45rem .5rem",
-                    background:isCur?(t.isPlayer?"rgba(91,155,213,.14)":"rgba(239,68,68,.12)"):"rgba(255,255,255,.02)",
-                    border:`1px solid ${isCur?(TOKEN_RING[t.cls]||"#888"):"transparent"}`,
-                    marginBottom:".28rem",transition:"all .25s",
-                    animation:isCur?"initGlow 2s infinite":"none",
-                  }}>
+                  <div key={t.id} style={{display:"flex",alignItems:"center",gap:".5rem",padding:".45rem .5rem",background:isCur?(t.isPlayer?"rgba(91,155,213,.14)":"rgba(239,68,68,.12)"):"rgba(255,255,255,.02)",border:`1px solid ${isCur?(TOKEN_RING[t.cls]||"#888"):"transparent"}`,marginBottom:".28rem",transition:"all .25s",animation:isCur?"initGlow 2s infinite":"none"}}>
                     <div style={{width:22,height:22,borderRadius:"50%",background:TOKEN_RING[t.cls]||"#888",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".58rem",fontWeight:700,color:"#050508",flexShrink:0,opacity:hp<=0?.35:1}}>{t.init}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:".7rem",color:hp<=0?"#5a5a6a":isCur?(TOKEN_RING[t.cls]||"var(--parchment)"):"var(--parchment)",fontFamily:"'Cinzel',serif",fontWeight:isCur?600:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.name}</div>
@@ -1005,7 +951,6 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
             </div>
           )}
 
-          {/* PARTY */}
           {rtab==="party" && (
             <div>
               <div className="section-hdr">⚔ Party</div>
@@ -1022,18 +967,13 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
               ))}
               <div className="gold-line"/>
               <div style={{fontSize:".68rem",color:"var(--silver)",lineHeight:1.6}}>🌍 Auto-translation active</div>
-              <button onClick={()=>switchTab("chat")} style={{
-                marginTop:".75rem",width:"100%",background:"rgba(91,155,213,.08)",border:"1px solid rgba(91,155,213,.25)",
-                color:"#5b9bd5",fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",
-                padding:".45rem",cursor:"pointer",textTransform:"uppercase",transition:"all .2s",
-              }}
+              <button onClick={()=>switchTab("chat")} style={{marginTop:".75rem",width:"100%",background:"rgba(91,155,213,.08)",border:"1px solid rgba(91,155,213,.25)",color:"#5b9bd5",fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",padding:".45rem",cursor:"pointer",textTransform:"uppercase",transition:"all .2s"}}
                 onMouseEnter={e=>e.currentTarget.style.background="rgba(91,155,213,.15)"}
                 onMouseLeave={e=>e.currentTarget.style.background="rgba(91,155,213,.08)"}
               >💬 Open Party Chat</button>
             </div>
           )}
 
-          {/* ROLLS */}
           {rtab==="rolls" && (
             <div>
               <div className="section-hdr">🎲 Roll History</div>
@@ -1047,7 +987,6 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
             </div>
           )}
 
-          {/* MAP LEGEND */}
           {rtab==="legend" && (
             <div>
               <div className="section-hdr">🗺 Map Legend</div>
@@ -1058,8 +997,7 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
                 {col:"rgba(0,0,0,.8)",label:"Fog of war"},
               ].map(l=>(
                 <div key={l.label} style={{display:"flex",alignItems:"center",gap:".6rem",marginBottom:".5rem",fontSize:".7rem",color:"var(--silver)"}}>
-                  <div style={{width:14,height:14,background:l.col,border:"1px solid var(--rune)",flexShrink:0}}/>
-                  {l.label}
+                  <div style={{width:14,height:14,background:l.col,border:"1px solid var(--rune)",flexShrink:0}}/>{l.label}
                 </div>
               ))}
               <div className="gold-line"/>
@@ -1075,7 +1013,6 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
         </div>
       )}
 
-      {/* PARTY CHAT — fills entire remaining panel height */}
       {rtab === "chat" && (
         <PartyChatPanel chatMessages={chatMessages} sendChat={sendChat} character={character}/>
       )}
@@ -1083,23 +1020,18 @@ function RightPanel({ gameTab, tokens, turnIdx, initOrder, diceLog, partyMembers
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BATTLE MAP PANEL
-// ─────────────────────────────────────────────────────────────────────────────
 function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState }) {
   const canvasRef = useRef(null);
   const { selId, fog, range, moved, drag, dragXY, hoverCell } = mapState;
 
   const setField = useCallback((k,v) => setMapState(p=>({...p,[k]:v})), [setMapState]);
 
-  // Draw
   useEffect(()=>{
     const cv=canvasRef.current; if(!cv)return;
     const ctx=cv.getContext("2d");
     ctx.clearRect(0,0,MAP_W,MAP_H);
     drawGrid(ctx);
     if(!moved) drawMoveRange(ctx,range,hoverCell);
-    // Enemy tokens under fog
     mapTokens.forEach(t=>{
       if(drag?.id===t.id)return;
       if(!t.isPlayer&&!fog.has(`${t.col},${t.row}`))return;
@@ -1127,19 +1059,13 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
     const{col,row,x,y}=getCell(e);
     const hit=mapTokens.find(t=>t.col===col&&t.row===row&&t.isPlayer);
     if(hit){
-      setField("selId",hit.id);
-      setField("range",computeRange(hit,mapTokens));
-      setField("moved",false);
-      setField("drag",{id:hit.id});
-      setField("dragXY",{x,y});
+      setField("selId",hit.id);setField("range",computeRange(hit,mapTokens));
+      setField("moved",false);setField("drag",{id:hit.id});setField("dragXY",{x,y});
       e.preventDefault();
     } else if(selId&&range.has(`${col},${row}`)&&!moved){
-      setMapTokens(prev=>{
-        const upd=prev.map(t=>t.id===selId?{...t,col,row}:t);
-        setField("fog",computeFog(upd)); return upd;
-      });
-      setField("range",new Set()); setField("moved",true);
-    } else { setField("selId",null); setField("range",new Set()); }
+      setMapTokens(prev=>{const upd=prev.map(t=>t.id===selId?{...t,col,row}:t);setField("fog",computeFog(upd));return upd;});
+      setField("range",new Set());setField("moved",true);
+    } else { setField("selId",null);setField("range",new Set()); }
   },[mapTokens,selId,range,moved,getCell,setField,setMapTokens]);
 
   const onMove=useCallback((e)=>{
@@ -1152,13 +1078,10 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
     if(!drag)return;
     const{col,row}=getCell(e);
     if(range.has(`${col},${row}`)&&!moved){
-      setMapTokens(prev=>{
-        const upd=prev.map(t=>t.id===drag.id?{...t,col,row}:t);
-        setField("fog",computeFog(upd)); return upd;
-      });
-      setField("range",new Set()); setField("moved",true);
+      setMapTokens(prev=>{const upd=prev.map(t=>t.id===drag.id?{...t,col,row}:t);setField("fog",computeFog(upd));return upd;});
+      setField("range",new Set());setField("moved",true);
     }
-    setField("drag",null); setField("dragXY",null);
+    setField("drag",null);setField("dragXY",null);
   },[drag,range,moved,getCell,setField,setMapTokens]);
 
   const selToken = mapTokens.find(t=>t.id===selId);
@@ -1171,7 +1094,6 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp}
           onMouseLeave={()=>{setField("hoverCell",null);if(drag){setField("drag",null);setField("dragXY",null);}}}
         />
-        {/* Selected token HUD */}
         {selToken&&(
           <div style={{position:"absolute",bottom:8,left:8,background:"rgba(5,5,15,.93)",border:`1px solid ${TOKEN_RING[selToken.cls]||"var(--gold-dim)"}`,padding:".55rem .8rem",minWidth:150,pointerEvents:"none"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".75rem",color:TOKEN_RING[selToken.cls]||"var(--gold)",marginBottom:".3rem"}}>{selToken.name}</div>
@@ -1185,7 +1107,6 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
             {moved&&<div style={{fontSize:".6rem",color:"var(--gold-dim)",marginTop:".35rem"}}>✓ Moved this turn</div>}
           </div>
         )}
-        {/* Top-left legend mini */}
         <div style={{position:"absolute",top:7,left:7,background:"rgba(5,5,15,.82)",border:"1px solid var(--rune)",padding:".35rem .5rem",fontSize:".56rem",color:"var(--silver)",letterSpacing:".07em",lineHeight:1.75,pointerEvents:"none"}}>
           <div style={{color:"var(--gold)",fontFamily:"'Cinzel',serif",marginBottom:".2rem",fontSize:".6rem"}}>LEGEND</div>
           <div><span style={{color:"rgba(74,158,255,.6)"}}>▪</span> Move range</div>
@@ -1194,7 +1115,6 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
           <div><span style={{color:"rgba(0,0,0,.8)"}}>▪</span> Fog</div>
         </div>
       </div>
-      {/* Dice bar */}
       <div className="dice-bar">
         <span style={{fontSize:".62rem",letterSpacing:".18em",color:"var(--gold-dim)",flexShrink:0,fontFamily:"'Cinzel',serif"}}>ROLL:</span>
         {[4,6,8,10,12,20,100].map(d=>(
@@ -1207,13 +1127,9 @@ function BattleMapPanel({ onRoll, mapTokens, setMapTokens, mapState, setMapState
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// NARRATIVE PANEL
-// ─────────────────────────────────────────────────────────────────────────────
 function NarrativePanel({ gameMessages, isTyping, inputText, setInputText, sendMessage, scrollRef }) {
   const handleKey = (e) => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(inputText);} };
 
-  // Voice: append transcript to text input, let player review before sending
   const { listening, interim, toggle, supported } = useSpeech((text) => {
     setInputText(prev => (prev ? prev + " " + text : text));
   });
@@ -1235,52 +1151,32 @@ function NarrativePanel({ gameMessages, isTyping, inputText, setInputText, sendM
           </div>
         )}
       </div>
-
       <div className="input-area">
-        {/* Quick actions */}
         <div style={{display:"flex",gap:".4rem",flexWrap:"wrap",marginBottom:".65rem"}}>
           {QUICK_ACTIONS.map(a=>(
             <button key={a} className="quick-btn" onClick={()=>sendMessage(a)} disabled={isTyping}>{a}</button>
           ))}
         </div>
-
-        {/* Interim voice preview */}
         {listening && (
           <div className="mic-interim" style={{marginBottom:".5rem"}}>
             🎙 {interim || <span style={{color:"var(--rune)"}}>Listening…</span>}
           </div>
         )}
-
-        {/* Input row */}
         <div style={{display:"flex",gap:".55rem",alignItems:"flex-end"}}>
-          {/* Mic button */}
           {supported && (
-            <button
-              className={`mic-btn ${listening?"active":""}`}
-              onClick={toggle}
-              disabled={isTyping}
-              title={listening?"Stop recording":"Speak your action"}
-              style={{height:56,width:46,borderRadius:4}}
-            >
+            <button className={`mic-btn ${listening?"active":""}`} onClick={toggle} disabled={isTyping}
+              title={listening?"Stop recording":"Speak your action"} style={{height:56,width:46,borderRadius:4}}>
               {listening ? "⏹" : "🎙"}
             </button>
           )}
-
           <textarea className="game-input" value={inputText} onChange={e=>setInputText(e.target.value)}
             onKeyDown={handleKey}
             placeholder={listening ? "Listening… speak your action" : "Describe your action… (Enter to send)"}
-            disabled={isTyping}
-            style={{flex:1}}
-          />
-
-          <button className="send-btn"
-            onClick={()=>sendMessage(inputText)}
-            disabled={isTyping||!inputText.trim()}
-          >
+            disabled={isTyping} style={{flex:1}}/>
+          <button className="send-btn" onClick={()=>sendMessage(inputText)} disabled={isTyping||!inputText.trim()}>
             {isTyping?"…":"Declare →"}
           </button>
         </div>
-
         {!supported && (
           <div style={{fontSize:".62rem",color:"var(--rune)",marginTop:".35rem",fontStyle:"italic"}}>
             Voice input requires Chrome or Edge
@@ -1291,23 +1187,14 @@ function NarrativePanel({ gameMessages, isTyping, inputText, setInputText, sendM
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GAME VIEW (the combined shell)
-// ─────────────────────────────────────────────────────────────────────────────
 function GameView({ character, session, gameMessages, isTyping, inputText, setInputText, sendMessage, scrollRef, onLeave }) {
   const [gameTab, setGameTab] = useState("narrative");
-
   const [mapTokens, setMapTokens] = useState(INIT_TOKENS);
-  const [mapState, setMapState]   = useState({
-    selId:null, fog:computeFog(INIT_TOKENS), range:new Set(),
-    moved:false, drag:null, dragXY:null, hoverCell:null,
-  });
+  const [mapState, setMapState]   = useState({selId:null,fog:computeFog(INIT_TOKENS),range:new Set(),moved:false,drag:null,dragXY:null,hoverCell:null});
   const [turnIdx,   setTurnIdx]   = useState(0);
   const [round,     setRound]     = useState(1);
   const [diceLog,   setDiceLog]   = useState([]);
   const [diceAnims, setDiceAnims] = useState([]);
-
-  // ── PARTY CHAT STATE ──────────────────────────────────────────────────────
   const [chatMessages, setChatMessages] = useState([
     { id:1, type:"system", text:"Party chat is private — only your group sees this", time:"" },
     { id:2, sender:"Valdris", flag:"🇺🇸", text:"Ready when you are. I'll take point.", time:"now", type:"msg" },
@@ -1318,7 +1205,6 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
   const sendChat = useCallback((text) => {
     const now = new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
     setChatMessages(p=>[...p, {id:Date.now(), sender:character.name||"You", flag:"🇺🇸", text, time:now, type:"msg"}]);
-    // Simulate a party member reply occasionally
     if (Math.random() < 0.4) {
       const replies = [
         {sender:"Valdris", flag:"🇺🇸", text:"Got it. Covering you."},
@@ -1334,7 +1220,6 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
   }, [character.name]);
 
   const clearChatUnread = useCallback(() => setChatUnread(0), []);
-
   const initOrder = [...INIT_TOKENS].sort((a,b)=>b.init-a.init);
   const curActor  = initOrder[turnIdx];
 
@@ -1348,7 +1233,6 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
     setDiceLog(p=>[entry,...p].slice(0,12));
     setDiceAnims(p=>[...p,entry]);
     setTimeout(()=>setDiceAnims(p=>p.filter(a=>a.id!==entry.id)),2600);
-    // also push to narrative
     sendMessage && sendMessage(`[DICE] ${label} rolled d${sides}: ${result}${result===sides?" — NATURAL MAX! ✨":result===1?" — CRITICAL FAIL! 💀":""}`, true);
   },[mapTokens, curActor, character.name, sendMessage]);
 
@@ -1366,7 +1250,6 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
 
   return (
     <div className="game-shell">
-      {/* TOP BAR */}
       <div className="game-topbar">
         <div style={{display:"flex",alignItems:"center",gap:"1.2rem"}}>
           <span style={{fontFamily:"'Cinzel Decorative',serif",fontSize:".95rem",color:"var(--gold)"}}>⚔ {session?.title||"The Adventure"}</span>
@@ -1375,22 +1258,14 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
             <button className={`view-tab ${gameTab==="battle"?"active":""}`} onClick={()=>setGameTab("battle")}>⚔️ Battle Map</button>
           </div>
         </div>
-
         <div style={{display:"flex",alignItems:"center",gap:".9rem"}}>
           {gameTab==="battle"&&(
             <>
               <span style={{fontSize:".7rem",color:"var(--silver)",fontFamily:"'Cinzel',serif",letterSpacing:".1em"}}>Round {round}</span>
-              <span style={{
-                fontFamily:"'Cinzel',serif",fontSize:".72rem",
-                color:curActor?.isPlayer?"var(--blue)":"var(--crimson-bright)",
-                padding:".22rem .7rem",
-                border:`1px solid ${curActor?.isPlayer?"rgba(91,155,213,.4)":"rgba(192,57,43,.4)"}`,
-                background:curActor?.isPlayer?"rgba(91,155,213,.1)":"rgba(192,57,43,.1)",
-              }}>{curActor?.name}</span>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",color:curActor?.isPlayer?"var(--blue)":"var(--crimson-bright)",padding:".22rem .7rem",border:`1px solid ${curActor?.isPlayer?"rgba(91,155,213,.4)":"rgba(192,57,43,.4)"}`,background:curActor?.isPlayer?"rgba(91,155,213,.1)":"rgba(192,57,43,.1)"}}>{curActor?.name}</span>
               <button onClick={endTurn} style={{background:"linear-gradient(135deg,var(--gold-dim),var(--gold))",border:"none",color:"var(--void)",fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",padding:".38rem .85rem",cursor:"pointer",fontWeight:700}}
                 onMouseEnter={e=>e.target.style.filter="brightness(1.2)"}
-                onMouseLeave={e=>e.target.style.filter=""}
-              >END TURN ▶</button>
+                onMouseLeave={e=>e.target.style.filter=""}>END TURN ▶</button>
             </>
           )}
           <div style={{display:"flex",alignItems:"center",gap:".4rem"}}>
@@ -1401,31 +1276,19 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
         </div>
       </div>
 
-      {/* LEFT CHAR PANEL */}
       <CharPanel character={character} classes={CLASSES}/>
 
-      {/* CENTER — swaps between narrative and battle */}
       {gameTab==="narrative"
         ? <NarrativePanel gameMessages={gameMessages} isTyping={isTyping} inputText={inputText}
             setInputText={setInputText} sendMessage={sendMessage} scrollRef={scrollRef}/>
         : <div style={{position:"relative",display:"flex",flexDirection:"column",overflow:"hidden"}}>
             <BattleMapPanel onRoll={handleRoll} mapTokens={mapTokens} setMapTokens={setMapTokens}
               mapState={mapState} setMapState={setMapState}/>
-            {/* Floating dice animations over the canvas */}
             {diceAnims.map(a=>{
               const nat=a.result===a.sides?"#f0c55a":a.result===1?"#ef4444":"var(--parchment)";
               const brd=a.result===a.sides?"2px solid #f0c55a":a.result===1?"2px solid #ef4444":"1px solid var(--gold-dim)";
               return (
-                <div key={a.id} style={{
-                  position:"absolute",
-                  left:`calc(${(a.x/MAP_W)*100}%)`,
-                  top:`calc(${(a.y/MAP_H)*100}%)`,
-                  transform:"translate(-50%,-100%)",
-                  pointerEvents:"none",
-                  animation:"floatUp 2.6s ease-out forwards",
-                  display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-                  zIndex:50,
-                }}>
+                <div key={a.id} style={{position:"absolute",left:`calc(${(a.x/MAP_W)*100}%)`,top:`calc(${(a.y/MAP_H)*100}%)`,transform:"translate(-50%,-100%)",pointerEvents:"none",animation:"floatUp 2.6s ease-out forwards",display:"flex",flexDirection:"column",alignItems:"center",gap:2,zIndex:50}}>
                   <div style={{background:"rgba(5,5,15,.92)",border:brd,padding:".28rem .55rem",textAlign:"center"}}>
                     <div style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"1.4rem",color:nat,lineHeight:1}}>{a.result}</div>
                     <div style={{fontSize:".56rem",color:"var(--silver)",letterSpacing:".1em"}}>d{a.sides}</div>
@@ -1441,7 +1304,6 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
           </div>
       }
 
-      {/* RIGHT PANEL */}
       <RightPanel gameTab={gameTab} tokens={mapTokens} turnIdx={turnIdx}
         initOrder={initOrder} diceLog={diceLog} partyMembers={partyWithPlayer} round={round}
         chatMessages={chatMessages} sendChat={sendChat} character={character}
@@ -1453,34 +1315,20 @@ function GameView({ character, session, gameMessages, isTyping, inputText, setIn
 // ─────────────────────────────────────────────────────────────────────────────
 // CHARACTER CREATION
 // ─────────────────────────────────────────────────────────────────────────────
-// CHARACTER CREATION — 4-step wizard with SRD data + Standard Array
-// ─────────────────────────────────────────────────────────────────────────────
 const STAT_KEYS = ["str","dex","con","int","wis","cha"];
 const STAT_LABELS = {str:"Strength",dex:"Dexterity",con:"Constitution",int:"Intelligence",wis:"Wisdom",cha:"Charisma"};
 
 function CharacterView({ character, setCharacter, onContinue }) {
   const [step, setStep] = useState(0);
-  // assignments[statKey] = value from standard array, or null
   const [assignments, setAssignments] = useState({str:null,dex:null,con:null,int:null,wis:null,cha:null});
-  const [pending, setPending] = useState(null); // which array value is "picked up"
-  const [flexChoices, setFlexChoices] = useState([]); // for Half-Elf extra +1s
+  const [pending, setPending] = useState(null);
+  const [flexChoices, setFlexChoices] = useState([]);
 
   const set = (f,v) => setCharacter(p=>({...p,[f]:v}));
   const raceData = RACES_DATA[character.race] || RACES_DATA.Human;
   const classData = CLASSES_DATA[character.charClass] || CLASSES_DATA.Fighter;
 
-  // Compute used values from pool
   const usedValues = Object.values(assignments).filter(v=>v!==null);
-  const availablePool = STANDARD_ARRAY.filter((v,i) => {
-    // Count how many times this value is used
-    const timesInArray = STANDARD_ARRAY.filter(x=>x===v).length;
-    const timesUsed = usedValues.filter(x=>x===v).length;
-    // Only show this slot as available if not all instances are assigned
-    if (usedValues.filter(x=>x===v).length === 0) return true;
-    return timesUsed < timesInArray;
-  });
-  // Deduplicated available values for display
-  const poolDisplay = STANDARD_ARRAY.map((v,i)=>({v,i,assigned:false}));
   const assignedCounts = {};
   usedValues.forEach(v=>{ assignedCounts[v]=(assignedCounts[v]||0)+1; });
   const poolWithState = STANDARD_ARRAY.map((v,i)=>{
@@ -1491,16 +1339,12 @@ function CharacterView({ character, setCharacter, onContinue }) {
   });
   const allAssigned = STAT_KEYS.every(k=>assignments[k]!==null);
 
-  // Apply racial bonuses on top of assignments
   function getFinalStats() {
     const base = {};
     STAT_KEYS.forEach(k => base[k] = assignments[k] || 10);
-    // racial bonuses
     const rb = raceData.abilityBonuses || {};
     Object.entries(rb).forEach(([k,v])=>{ base[k]=(base[k]||0)+v; });
-    // half-elf flex bonuses
     flexChoices.forEach(k=>{ if(k && k!=="cha") base[k]=(base[k]||0)+1; });
-    // subrace bonuses
     if (character.subrace) {
       const sub = raceData.subraces?.find(s=>s.name===character.subrace);
       if (sub?.bonuses) Object.entries(sub.bonuses).forEach(([k,v])=>{ base[k]=(base[k]||0)+v; });
@@ -1510,7 +1354,6 @@ function CharacterView({ character, setCharacter, onContinue }) {
 
   const finalStats = getFinalStats();
 
-  // On step 4 confirm: save stats to character
   const confirmStats = () => {
     const fs = getFinalStats();
     setCharacter(p=>({...p, stats:fs,
@@ -1523,33 +1366,16 @@ function CharacterView({ character, setCharacter, onContinue }) {
   const STEPS = ["Identity","Race","Class","Abilities"];
 
   const card = (children, extra={}) => (
-    <div style={{background:"var(--coal)",border:"1px solid var(--gold-dim)",padding:"1.75rem",...extra}}>
-      {children}
-    </div>
+    <div style={{background:"var(--coal)",border:"1px solid var(--gold-dim)",padding:"1.75rem",...extra}}>{children}</div>
   );
 
-  // ── STEP HEADER ──────────────────────────────────────────────────────────────
   const StepHeader = () => (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:0,marginBottom:"2rem"}}>
       {STEPS.map((s,i)=>(
         <div key={s} style={{display:"flex",alignItems:"center"}}>
-          <div onClick={()=>i<step&&setStep(i)} style={{
-            display:"flex",alignItems:"center",gap:".5rem",
-            padding:".4rem .9rem",
-            background: i===step?"rgba(201,168,76,.15)": i<step?"transparent":"transparent",
-            border: i===step?"1px solid var(--gold)": i<step?"1px solid var(--gold-dim)":"1px solid var(--rune)",
-            cursor: i<step?"pointer":"default",
-            transition:"all .2s",
-          }}>
-            <div style={{
-              width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
-              background: i<step?"var(--gold)": i===step?"var(--gold-dim)":"var(--rune)",
-              color: i<step?"var(--void)":"var(--silver)",
-              fontSize:".65rem",fontFamily:"'Cinzel',serif",fontWeight:700,flexShrink:0,
-            }}>{i<step?"✓":i+1}</div>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".1em",color:i===step?"var(--gold)":i<step?"var(--parchment-dim)":"var(--rune)",textTransform:"uppercase"}}>
-              {s}
-            </span>
+          <div onClick={()=>i<step&&setStep(i)} style={{display:"flex",alignItems:"center",gap:".5rem",padding:".4rem .9rem",background:i===step?"rgba(201,168,76,.15)":"transparent",border:i===step?"1px solid var(--gold)":i<step?"1px solid var(--gold-dim)":"1px solid var(--rune)",cursor:i<step?"pointer":"default",transition:"all .2s"}}>
+            <div style={{width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:i<step?"var(--gold)":i===step?"var(--gold-dim)":"var(--rune)",color:i<step?"var(--void)":"var(--silver)",fontSize:".65rem",fontFamily:"'Cinzel',serif",fontWeight:700,flexShrink:0}}>{i<step?"✓":i+1}</div>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".1em",color:i===step?"var(--gold)":i<step?"var(--parchment-dim)":"var(--rune)",textTransform:"uppercase"}}>{s}</span>
           </div>
           {i<STEPS.length-1&&<div style={{width:24,height:1,background:i<step?"var(--gold-dim)":"var(--rune)"}}/>}
         </div>
@@ -1557,7 +1383,6 @@ function CharacterView({ character, setCharacter, onContinue }) {
     </div>
   );
 
-  // ── CHARACTER PREVIEW STRIP ──────────────────────────────────────────────────
   const PreviewStrip = () => {
     const cls = CLASSES.find(c=>c.name===character.charClass)||CLASSES[0];
     return (
@@ -1581,15 +1406,9 @@ function CharacterView({ character, setCharacter, onContinue }) {
     );
   };
 
-  // ── STEP 0: IDENTITY ─────────────────────────────────────────────────────────
   const StepIdentity = () => (
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.25rem"}}>
-      {[
-        ["name","Character Name","text",null],
-        ["background","Background","sel",BACKGROUNDS],
-        ["alignment","Alignment","sel",ALIGNMENTS],
-        ["level","Level","sel",null],
-      ].map(([f,lbl,type,opts])=>(
+      {[["name","Character Name","text",null],["background","Background","sel",BACKGROUNDS],["alignment","Alignment","sel",ALIGNMENTS],["level","Level","sel",null]].map(([f,lbl,type,opts])=>(
         <div key={f} style={{display:"flex",flexDirection:"column",gap:".4rem"}}>
           <label className="field-label">{lbl}</label>
           {type==="text" && <input className="field-input" value={character[f]} onChange={e=>set(f,e.target.value)} placeholder="Enter name…"/>}
@@ -1599,41 +1418,25 @@ function CharacterView({ character, setCharacter, onContinue }) {
       ))}
       <div style={{gridColumn:"1/-1",display:"flex",flexDirection:"column",gap:".4rem"}}>
         <label className="field-label">Backstory</label>
-        <textarea className="field-input" style={{height:80,resize:"vertical"}} value={character.backstory}
-          onChange={e=>set("backstory",e.target.value)} placeholder="Tell the DM your history, motivations, secrets…"/>
+        <textarea className="field-input" style={{height:80,resize:"vertical"}} value={character.backstory} onChange={e=>set("backstory",e.target.value)} placeholder="Tell the DM your history, motivations, secrets…"/>
       </div>
     </div>
   );
 
-  // ── STEP 1: RACE ─────────────────────────────────────────────────────────────
   const StepRace = () => {
     const rd = RACES_DATA[character.race]||RACES_DATA.Human;
     return (
       <div style={{display:"grid",gridTemplateColumns:"220px 1fr",gap:"1.5rem"}}>
-        {/* Race list */}
         <div style={{display:"flex",flexDirection:"column",gap:".35rem"}}>
           <div className="field-label" style={{marginBottom:".5rem"}}>Choose Race</div>
           {Object.entries(RACES_DATA).map(([name,d])=>(
             <button key={name} onClick={()=>{set("race",name);set("subrace",d.subraces?.[0]?.name||"");}}
-              style={{
-                background: character.race===name?"rgba(201,168,76,.12)":"transparent",
-                border: character.race===name?"1px solid var(--gold)":"1px solid var(--rune)",
-                color: character.race===name?"var(--gold)":"var(--silver)",
-                fontFamily:"'Cinzel',serif", fontSize:".75rem", letterSpacing:".08em",
-                padding:".55rem .75rem", cursor:"pointer", textAlign:"left",
-                display:"flex", alignItems:"center", gap:".6rem",
-                transition:"all .18s",
-              }}
-            >
+              style={{background:character.race===name?"rgba(201,168,76,.12)":"transparent",border:character.race===name?"1px solid var(--gold)":"1px solid var(--rune)",color:character.race===name?"var(--gold)":"var(--silver)",fontFamily:"'Cinzel',serif",fontSize:".75rem",letterSpacing:".08em",padding:".55rem .75rem",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:".6rem",transition:"all .18s"}}>
               <span>{d.emoji}</span><span>{name}</span>
-              <span style={{marginLeft:"auto",fontSize:".6rem",color:"var(--rune)"}}>
-                {Object.entries(d.abilityBonuses||{}).map(([k,v])=>`${k.toUpperCase()}+${v}`).join(" ")}
-              </span>
+              <span style={{marginLeft:"auto",fontSize:".6rem",color:"var(--rune)"}}>{Object.entries(d.abilityBonuses||{}).map(([k,v])=>`${k.toUpperCase()}+${v}`).join(" ")}</span>
             </button>
           ))}
         </div>
-
-        {/* Race details */}
         <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
           <div style={{background:"var(--void)",border:`1px solid ${rd.color}40`,padding:"1.25rem"}}>
             <div style={{display:"flex",alignItems:"center",gap:".75rem",marginBottom:".75rem"}}>
@@ -1656,22 +1459,13 @@ function CharacterView({ character, setCharacter, onContinue }) {
               </div>
             ))}
           </div>
-
-          {/* Subraces */}
           {rd.subraces?.length>0 && (
             <div>
               <div className="field-label" style={{marginBottom:".6rem"}}>Subrace</div>
               <div style={{display:"flex",gap:".6rem",flexWrap:"wrap"}}>
                 {rd.subraces.map(s=>(
                   <button key={s.name} onClick={()=>set("subrace",s.name)}
-                    style={{
-                      background: character.subrace===s.name?"rgba(201,168,76,.12)":"transparent",
-                      border: character.subrace===s.name?"1px solid var(--gold)":"1px solid var(--rune)",
-                      color: character.subrace===s.name?"var(--gold)":"var(--silver)",
-                      fontFamily:"'Cinzel',serif", fontSize:".72rem", padding:".4rem .85rem",
-                      cursor:"pointer", transition:"all .18s",
-                    }}
-                  >{s.name}</button>
+                    style={{background:character.subrace===s.name?"rgba(201,168,76,.12)":"transparent",border:character.subrace===s.name?"1px solid var(--gold)":"1px solid var(--rune)",color:character.subrace===s.name?"var(--gold)":"var(--silver)",fontFamily:"'Cinzel',serif",fontSize:".72rem",padding:".4rem .85rem",cursor:"pointer",transition:"all .18s"}}>{s.name}</button>
                 ))}
               </div>
               {character.subrace && (() => {
@@ -1690,8 +1484,6 @@ function CharacterView({ character, setCharacter, onContinue }) {
               })()}
             </div>
           )}
-
-          {/* Half-Elf flex +1 choices */}
           {character.race==="Half-Elf" && (
             <div>
               <div className="field-label" style={{marginBottom:".5rem"}}>Choose 2 additional ability scores to increase by +1 (not Charisma)</div>
@@ -1702,14 +1494,7 @@ function CharacterView({ character, setCharacter, onContinue }) {
                   return (
                     <button key={k} disabled={disabled}
                       onClick={()=>setFlexChoices(p=>p.includes(k)?p.filter(x=>x!==k):[...p,k])}
-                      style={{
-                        background: chosen?"rgba(201,168,76,.15)":"transparent",
-                        border: chosen?"1px solid var(--gold)":"1px solid var(--rune)",
-                        color: chosen?"var(--gold)":disabled?"var(--rune)":"var(--silver)",
-                        fontFamily:"'Cinzel',serif", fontSize:".7rem", padding:".35rem .7rem",
-                        cursor:disabled?"not-allowed":"pointer", transition:"all .18s",
-                        textTransform:"uppercase",
-                      }}
+                      style={{background:chosen?"rgba(201,168,76,.15)":"transparent",border:chosen?"1px solid var(--gold)":"1px solid var(--rune)",color:chosen?"var(--gold)":disabled?"var(--rune)":"var(--silver)",fontFamily:"'Cinzel',serif",fontSize:".7rem",padding:".35rem .7rem",cursor:disabled?"not-allowed":"pointer",transition:"all .18s",textTransform:"uppercase"}}
                     >{k.toUpperCase()}</button>
                   );
                 })}
@@ -1721,32 +1506,20 @@ function CharacterView({ character, setCharacter, onContinue }) {
     );
   };
 
-  // ── STEP 2: CLASS ────────────────────────────────────────────────────────────
   const StepClass = () => {
     const cd = CLASSES_DATA[character.charClass]||CLASSES_DATA.Fighter;
     return (
       <div style={{display:"grid",gridTemplateColumns:"220px 1fr",gap:"1.5rem"}}>
-        {/* Class list */}
         <div style={{display:"flex",flexDirection:"column",gap:".35rem"}}>
           <div className="field-label" style={{marginBottom:".5rem"}}>Choose Class</div>
           {Object.entries(CLASSES_DATA).map(([name,d])=>(
             <button key={name} onClick={()=>set("charClass",name)}
-              style={{
-                background: character.charClass===name?"rgba(201,168,76,.12)":"transparent",
-                border: character.charClass===name?`1px solid ${d.color}`:"1px solid var(--rune)",
-                color: character.charClass===name?d.color:"var(--silver)",
-                fontFamily:"'Cinzel',serif", fontSize:".75rem", letterSpacing:".08em",
-                padding:".55rem .75rem", cursor:"pointer", textAlign:"left",
-                display:"flex", alignItems:"center", gap:".6rem", transition:"all .18s",
-              }}
-            >
+              style={{background:character.charClass===name?"rgba(201,168,76,.12)":"transparent",border:character.charClass===name?`1px solid ${d.color}`:"1px solid var(--rune)",color:character.charClass===name?d.color:"var(--silver)",fontFamily:"'Cinzel',serif",fontSize:".75rem",letterSpacing:".08em",padding:".55rem .75rem",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:".6rem",transition:"all .18s"}}>
               <span>{d.emoji}</span><span>{name}</span>
               <span style={{marginLeft:"auto",fontSize:".58rem",color:"var(--rune)"}}>{d.hitDie}</span>
             </button>
           ))}
         </div>
-
-        {/* Class details */}
         <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
           <div style={{background:"var(--void)",border:`1px solid ${cd.color}40`,padding:"1.25rem"}}>
             <div style={{display:"flex",alignItems:"center",gap:".75rem",marginBottom:".75rem"}}>
@@ -1757,19 +1530,13 @@ function CharacterView({ character, setCharacter, onContinue }) {
               </div>
             </div>
             <div style={{fontSize:".8rem",color:"var(--parchment-dim)",fontStyle:"italic",lineHeight:1.6,marginBottom:".9rem"}}>{cd.description}</div>
-
-            {[
-              ["Saving Throws", cd.savingThrows.join(", ")],
-              ["Armor", cd.armorProf],
-              ["Weapons", cd.weaponProf],
-            ].map(([label,val])=>(
+            {[["Saving Throws",cd.savingThrows.join(", ")],["Armor",cd.armorProf],["Weapons",cd.weaponProf]].map(([label,val])=>(
               <div key={label} style={{display:"flex",gap:".5rem",padding:".35rem 0",borderTop:"1px solid var(--rune)"}}>
                 <span style={{fontFamily:"'Cinzel',serif",fontSize:".66rem",color:"var(--gold-dim)",minWidth:90,flexShrink:0}}>{label}</span>
                 <span style={{fontSize:".75rem",color:"var(--silver)",lineHeight:1.5}}>{val}</span>
               </div>
             ))}
           </div>
-
           <div>
             <div className="field-label" style={{marginBottom:".7rem"}}>1st Level Features</div>
             {cd.features.map(f=>(
@@ -1784,25 +1551,15 @@ function CharacterView({ character, setCharacter, onContinue }) {
     );
   };
 
-  // ── STEP 3: ABILITIES ────────────────────────────────────────────────────────
   const StepAbilities = () => {
     const handlePoolClick = (val, poolIdx) => {
       if (pending?.val===val && pending?.idx===poolIdx) { setPending(null); return; }
       setPending({val, idx:poolIdx});
     };
     const handleStatClick = (statKey) => {
-      if (!pending) {
-        // unassign
-        if (assignments[statKey]!==null) {
-          setAssignments(p=>({...p,[statKey]:null}));
-        }
-        return;
-      }
-      // assign pending value
-      const old = assignments[statKey];
+      if (!pending) { if (assignments[statKey]!==null) { setAssignments(p=>({...p,[statKey]:null})); } return; }
       setAssignments(p=>({...p,[statKey]:pending.val}));
       setPending(null);
-      // if stat had a value, it goes back to pool automatically (derived from assignments)
     };
 
     return (
@@ -1810,7 +1567,7 @@ function CharacterView({ character, setCharacter, onContinue }) {
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1.25rem",flexWrap:"wrap",gap:".75rem"}}>
           <div>
             <div className="field-label" style={{marginBottom:".25rem"}}>Standard Array Assignment</div>
-            <div style={{fontSize:".75rem",color:"var(--silver)",fontStyle:"italic"}}>Click a value from the pool, then click an ability score to assign it. Click an assigned score to unassign.</div>
+            <div style={{fontSize:".75rem",color:"var(--silver)",fontStyle:"italic"}}>Click a value from the pool, then click an ability score to assign it.</div>
           </div>
           <button onClick={()=>setAssignments({str:null,dex:null,con:null,int:null,wis:null,cha:null})}
             style={{background:"transparent",border:"1px solid var(--rune)",color:"var(--silver)",fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",padding:".35rem .75rem",cursor:"pointer",textTransform:"uppercase",transition:"all .2s"}}
@@ -1818,28 +1575,14 @@ function CharacterView({ character, setCharacter, onContinue }) {
             onMouseLeave={e=>{e.target.style.borderColor="var(--rune)";e.target.style.color="var(--silver)";}}
           >Reset</button>
         </div>
-
-        {/* Pool */}
         <div style={{marginBottom:"1.5rem"}}>
           <div className="field-label" style={{marginBottom:".6rem"}}>Available Values</div>
           <div style={{display:"flex",gap:".6rem",flexWrap:"wrap"}}>
             {poolWithState.map(({v,i,used})=>{
               const isPicked = pending?.val===v && pending?.idx===i;
               return (
-                <button key={i} disabled={used}
-                  onClick={()=>!used&&handlePoolClick(v,i)}
-                  style={{
-                    width:52,height:52,
-                    background: used?"var(--void)":isPicked?"rgba(201,168,76,.25)":"var(--slate)",
-                    border: used?"1px dashed var(--rune)":isPicked?"2px solid var(--gold)":"1px solid var(--rune)",
-                    color: used?"var(--rune)":isPicked?"var(--gold)":"var(--parchment)",
-                    fontFamily:"'Cinzel Decorative',serif",fontSize:"1.3rem",
-                    cursor:used?"default":"pointer",
-                    transition:"all .18s",
-                    opacity: used ? 0.4 : 1,
-                    position:"relative",
-                  }}
-                >
+                <button key={i} disabled={used} onClick={()=>!used&&handlePoolClick(v,i)}
+                  style={{width:52,height:52,background:used?"var(--void)":isPicked?"rgba(201,168,76,.25)":"var(--slate)",border:used?"1px dashed var(--rune)":isPicked?"2px solid var(--gold)":"1px solid var(--rune)",color:used?"var(--rune)":isPicked?"var(--gold)":"var(--parchment)",fontFamily:"'Cinzel Decorative',serif",fontSize:"1.3rem",cursor:used?"default":"pointer",transition:"all .18s",opacity:used?0.4:1,position:"relative"}}>
                   {v}
                   {isPicked&&<div style={{position:"absolute",top:-6,right:-6,width:12,height:12,borderRadius:"50%",background:"var(--gold)",fontSize:".5rem",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--void)",fontWeight:700}}>✓</div>}
                 </button>
@@ -1848,44 +1591,24 @@ function CharacterView({ character, setCharacter, onContinue }) {
           </div>
           {pending && <div style={{marginTop:".5rem",fontSize:".72rem",color:"var(--gold)",fontFamily:"'Cinzel',serif",letterSpacing:".08em"}}>◆ {pending.val} selected — click an ability score to assign it</div>}
         </div>
-
-        {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:".85rem",marginBottom:"1.25rem"}}>
           {STAT_KEYS.map(k=>{
             const base = assignments[k];
             const rb = (raceData.abilityBonuses||{})[k]||0;
-            const subBonus = (() => {
-              if (character.subrace) {
-                const sub = raceData.subraces?.find(s=>s.name===character.subrace);
-                return (sub?.bonuses||{})[k]||0;
-              }
-              return 0;
-            })();
+            const subBonus = (() => { if (character.subrace) { const sub = raceData.subraces?.find(s=>s.name===character.subrace); return (sub?.bonuses||{})[k]||0; } return 0; })();
             const flexBonus = flexChoices.includes(k)?1:0;
             const total = (base||0)+rb+subBonus+flexBonus;
             const isActive = pending!==null && base===null;
             const hasValue = base!==null;
             return (
               <div key={k} onClick={()=>handleStatClick(k)}
-                style={{
-                  background: isActive?"rgba(74,158,255,.08)":hasValue?"var(--slate)":"var(--void)",
-                  border: isActive?"1px solid rgba(74,158,255,.5)":hasValue?"1px solid var(--gold-dim)":"1px dashed var(--rune)",
-                  padding:"1rem .5rem",textAlign:"center",
-                  cursor: pending||hasValue?"pointer":"default",
-                  transition:"all .18s",
-                  position:"relative",
-                }}
-              >
+                style={{background:isActive?"rgba(74,158,255,.08)":hasValue?"var(--slate)":"var(--void)",border:isActive?"1px solid rgba(74,158,255,.5)":hasValue?"1px solid var(--gold-dim)":"1px dashed var(--rune)",padding:"1rem .5rem",textAlign:"center",cursor:pending||hasValue?"pointer":"default",transition:"all .18s",position:"relative"}}>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".15em",color:"var(--silver)",textTransform:"uppercase",marginBottom:".35rem"}}>{k}</div>
                 {hasValue ? (
                   <>
                     <div style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"1.9rem",color:"var(--gold)",lineHeight:1}}>{total}</div>
                     <div style={{fontSize:".68rem",color:"var(--silver)",margin:".2rem 0"}}>{modStr(total)}</div>
-                    {(rb+subBonus+flexBonus)>0&&(
-                      <div style={{fontSize:".58rem",color:"var(--gold-dim)"}}>
-                        {base} + {rb+subBonus+flexBonus}
-                      </div>
-                    )}
+                    {(rb+subBonus+flexBonus)>0&&<div style={{fontSize:".58rem",color:"var(--gold-dim)"}}>{base} + {rb+subBonus+flexBonus}</div>}
                     <div style={{fontSize:".55rem",color:"var(--rune)",marginTop:".3rem"}}>click to unassign</div>
                   </>
                 ) : (
@@ -1896,14 +1619,12 @@ function CharacterView({ character, setCharacter, onContinue }) {
             );
           })}
         </div>
-
-        {/* Racial bonus summary */}
         <div style={{background:"var(--void)",border:"1px solid var(--rune)",padding:".9rem 1.1rem"}}>
           <div style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".15em",color:"var(--gold-dim)",marginBottom:".5rem"}}>RACIAL BONUSES APPLIED — {character.race}{character.subrace?` / ${character.subrace}`:""}</div>
           <div style={{display:"flex",gap:".8rem",flexWrap:"wrap"}}>
             {STAT_KEYS.map(k=>{
               const rb=(raceData.abilityBonuses||{})[k]||0;
-              const sub = raceData.subraces?.find(s=>s.name===character.subrace);
+              const sub=raceData.subraces?.find(s=>s.name===character.subrace);
               const sb=(sub?.bonuses||{})[k]||0;
               const fb=flexChoices.includes(k)?1:0;
               const total=rb+sb+fb;
@@ -1915,7 +1636,6 @@ function CharacterView({ character, setCharacter, onContinue }) {
             )}
           </div>
         </div>
-
         {!allAssigned&&(
           <div style={{marginTop:".9rem",fontSize:".75rem",color:"var(--crimson-bright)",fontFamily:"'Cinzel',serif",letterSpacing:".08em"}}>
             ⚠ Assign all 6 values before continuing ({STAT_KEYS.filter(k=>assignments[k]===null).length} remaining)
@@ -1925,7 +1645,6 @@ function CharacterView({ character, setCharacter, onContinue }) {
     );
   };
 
-  // ── RENDER ───────────────────────────────────────────────────────────────────
   const canAdvance = () => {
     if(step===0) return !!character.name;
     if(step===1) return true;
@@ -1940,30 +1659,15 @@ function CharacterView({ character, setCharacter, onContinue }) {
         <h1 style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"2rem",color:"var(--gold)",marginBottom:".4rem"}}>Forge Your Legend</h1>
         <p style={{color:"var(--silver)",fontStyle:"italic"}}>Build your hero using the SRD 5.1.1 rules</p>
       </div>
-
       <StepHeader/>
       <PreviewStrip/>
-
-      {card(
-        <>
-          {step===0&&<StepIdentity/>}
-          {step===1&&<StepRace/>}
-          {step===2&&<StepClass/>}
-          {step===3&&<StepAbilities/>}
-        </>
-      )}
-
+      {card(<>{step===0&&<StepIdentity/>}{step===1&&<StepRace/>}{step===2&&<StepClass/>}{step===3&&<StepAbilities/>}</>)}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <button className="btn btn-ghost" style={{padding:".55rem 1.25rem",fontSize:".68rem",visibility:step===0?"hidden":"visible"}}
-          onClick={()=>setStep(s=>s-1)}>← Back</button>
+        <button className="btn btn-ghost" style={{padding:".55rem 1.25rem",fontSize:".68rem",visibility:step===0?"hidden":"visible"}} onClick={()=>setStep(s=>s-1)}>← Back</button>
         <div style={{fontSize:".68rem",color:"var(--rune)",fontFamily:"'Cinzel',serif",letterSpacing:".1em"}}>Step {step+1} of {STEPS.length}</div>
         {step<STEPS.length-1
-          ? <button className="btn btn-gold" style={{padding:".55rem 1.25rem",fontSize:".7rem"}} onClick={()=>setStep(s=>s+1)} disabled={!canAdvance()}>
-              {canAdvance()?`Next: ${STEPS[step+1]} →`:"Complete this step first"}
-            </button>
-          : <button className="btn btn-gold" style={{padding:".55rem 1.25rem",fontSize:".7rem"}} onClick={confirmStats} disabled={!canAdvance()}>
-              {canAdvance()?"Enter the Tavern →":"Assign all stats first"}
-            </button>
+          ? <button className="btn btn-gold" style={{padding:".55rem 1.25rem",fontSize:".7rem"}} onClick={()=>setStep(s=>s+1)} disabled={!canAdvance()}>{canAdvance()?`Next: ${STEPS[step+1]} →`:"Complete this step first"}</button>
+          : <button className="btn btn-gold" style={{padding:".55rem 1.25rem",fontSize:".7rem"}} onClick={confirmStats} disabled={!canAdvance()}>{canAdvance()?"Enter the Tavern →":"Assign all stats first"}</button>
         }
       </div>
     </div>
@@ -2015,7 +1719,6 @@ function LobbyView({ sessions, selectedSession, setSelectedSession, character, o
             </div>
           )}
         </div>
-        {/* Party preview */}
         <div style={{background:"var(--coal)",border:"1px solid var(--gold-dim)",padding:"1.4rem",position:"sticky",top:"5rem"}}>
           <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",color:"var(--gold)",marginBottom:"1.1rem"}}>⚔️ FORMING PARTY</div>
           {character.name&&(
@@ -2040,9 +1743,9 @@ function LobbyView({ sessions, selectedSession, setSelectedSession, character, o
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LANDING
+// LANDING  ← EDIT 1: added onDemo prop + wired Watch Demo button
 // ─────────────────────────────────────────────────────────────────────────────
-function LandingView({ onPlay }) {
+function LandingView({ onPlay, onDemo }) {
   return (
     <div style={{paddingTop:60}}>
       <div className="hero">
@@ -2053,7 +1756,8 @@ function LandingView({ onPlay }) {
         <p className="hero-tag">Join adventurers from every corner of the globe. Your AI DM speaks every language, remembers every deed, and spins legendary tales — with a full battle map at the click of a button.</p>
         <div style={{display:"flex",gap:"1rem",flexWrap:"wrap",justifyContent:"center",marginBottom:"2.5rem"}}>
           <button className="btn btn-gold" onClick={onPlay}>Begin Your Adventure</button>
-          <button className="btn btn-ghost">Watch Demo</button>
+          {/* ← EDIT 2: Watch Demo now calls onDemo */}
+          <button className="btn btn-ghost" onClick={onDemo}>Watch Demo</button>
         </div>
         <div style={{display:"flex",gap:"1.5rem",flexWrap:"wrap",justifyContent:"center"}}>
           {["🌍 Global Multiplayer","🗣️ Instant Translation","🎲 True 5e SRD","⏱️ Games Every 2 Hours","🗺️ Live Battle Maps","🧠 AI Dungeon Master"].map(b=>(
@@ -2061,7 +1765,6 @@ function LandingView({ onPlay }) {
           ))}
         </div>
       </div>
-      {/* Features */}
       <div style={{padding:"4.5rem 2rem",maxWidth:1060,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:"2.5rem"}}>
           <h2 style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"1.8rem",color:"var(--gold)",marginBottom:".4rem"}}>How It Works</h2>
@@ -2084,7 +1787,6 @@ function LandingView({ onPlay }) {
           ))}
         </div>
       </div>
-      {/* Pricing */}
       <div style={{padding:"4.5rem 2rem",background:"var(--void)"}}>
         <div style={{textAlign:"center",marginBottom:"2.5rem"}}>
           <h2 style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"1.8rem",color:"var(--gold)",marginBottom:".4rem"}}>Choose Your Path</h2>
@@ -2151,9 +1853,29 @@ export default function App() {
     setIsTyping(false);
   },[selectedSession,character]);
 
+  // ← EDIT 3: startDemo — skips character creation, loads pre-built hero, jumps straight to game
+  const startDemo = useCallback(async () => {
+    const demoChar = DEMO_CHARACTER;
+    const session  = SESSIONS[0];
+    setCharacter(demoChar);
+    setSelectedSession(session);
+    setView("game");
+    setGameMessages([{id:Date.now(),type:"system",text:`⚔️  Demo: ${session.title}  ⚔️`}]);
+    setIsTyping(true);
+    const opening=[{role:"user",content:"Begin the adventure. Set the scene with a compelling opening."}];
+    setApiHistory(opening);
+    try {
+      const dm = await callDM(opening, demoChar, session.title);
+      setApiHistory([...opening,{role:"assistant",content:dm}]);
+      setGameMessages(p=>[...p,{id:Date.now()+1,type:"dm",text:dm}]);
+    } catch {
+      setGameMessages(p=>[...p,{id:Date.now()+1,type:"dm",text:"Torchlight flickers as you descend into the Sunken Citadel. Ancient stone walls loom around you, damp with centuries of darkness. Somewhere ahead, you hear the skittering of small claws on stone. What do you do?"}]);
+    }
+    setIsTyping(false);
+  }, []);
+
   const sendMessage = useCallback(async(text, isDiceRoll=false)=>{
     if(!text?.trim()) return;
-    // Dice rolls show as system messages in narrative, not sent to DM
     if(isDiceRoll){
       setGameMessages(p=>[...p,{id:Date.now(),type:"system",text}]);
       return;
@@ -2174,9 +1896,6 @@ export default function App() {
     setIsTyping(false);
   },[isTyping,apiHistory,character,selectedSession]);
 
-  const updateStat=(s,d)=>setCharacter(p=>({...p,stats:{...p.stats,[s]:Math.max(3,Math.min(20,p.stats[s]+d))}}));
-
-  // Game view renders its own full-screen shell (no top nav)
   if(view==="game") return (
     <>
       <style>{STYLES}</style>
@@ -2207,7 +1926,7 @@ export default function App() {
           </button>
         </div>
       </nav>
-      {view==="landing"&&<LandingView onPlay={()=>setView("character")}/>}
+      {view==="landing"&&<LandingView onPlay={()=>setView("character")} onDemo={startDemo}/>}
       {view==="character"&&<CharacterView character={character} setCharacter={setCharacter} onContinue={()=>setView("lobby")}/>}
       {view==="lobby"&&<LobbyView sessions={SESSIONS} selectedSession={selectedSession} setSelectedSession={setSelectedSession} character={character} onJoin={startGame} onCreateChar={()=>setView("character")}/>}
     </div>
