@@ -572,7 +572,12 @@ Stats: STR${character.stats.str} DEX${character.stats.dex} CON${character.stats.
 Backstory: ${character.backstory||"Unknown past."}
 Rules: 2-4 vivid sentences per response. Reference SRD 5.1 rules. Mark dice rolls as [ROLL: Stealth DC 13]. Stay in character as DM.`;
   const res=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",headers:{"Content-Type":"application/json"},
+    method:"POST",headers: {
+  "Content-Type": "application/json",
+  "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
+  "anthropic-version": "2023-06-01",
+  "anthropic-dangerous-direct-browser-access": "true",
+},
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:messages.filter(m=>m.role!=="system")}),
   });
   const data=await res.json();
